@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eterna Backend - WebSocket Demo</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+
+    .status-indicator.connected {
+      background: #10b981;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .controls {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .tokens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .token-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .token-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .token-card.updated {
+      animation: highlight 1s ease-in-out;
+    }
+
+    @keyframes highlight {
+      0%, 100% { background: white; }
+      50% { background: #fef3c7; }
+    }
+
+    .token-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .token-name {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .token-ticker {
+      color: #667eea;
+      font-size: 14px;
+    }
+
+    .token-protocol {
+      background: #e0e7ff;
+      color: #667eea;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .token-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-label {
+      color: #666;
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .price-change {
+      font-weight: bold;
+    }
+
+    .price-change.positive {
+      color: #10b981;
+    }
+
+    .price-change.negative {
+      color: #ef4444;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+      font-size: 18px;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 Eterna Backend - Real-time Token Tracker</h1>
+      <div class="status">
+        <div class="status-indicator" id="statusIndicator"></div>
+        <span id="statusText">Connecting...</span>
+      </div>
+    </header>
+
+    <div class="controls">
+      <button onclick="connect()" id="connectBtn">Connect</button>
+      <button onclick="disconnect()" id="disconnectBtn" disabled>Disconnect</button>
+      <button onclick="refreshData()" id="refreshBtn" disabled>Refresh Data</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <h3>Total Tokens</h3>
+        <div class="value" id="totalTokens">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Updates Received</h3>
+        <div class="value" id="updatesReceived">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Last Update</h3>
+        <div class="value" id="lastUpdate">-</div>
+      </div>
+      <div class="stat-card">
+        <h3>Connection Time</h3>
+        <div class="value" id="connectionTime">0s</div>
+      </div>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+    <div id="loading" class="loading">Connecting to server...</div>
+    <div class="tokens-grid" id="tokensGrid"></div>
+  </div>
+
+  <script>
+    let socket = null;
+    let tokens = new Map();
+    let updatesReceived = 0;
+    let connectionStartTime = null;
+    let connectionTimeInterval = null;
+
+    const API_URL = 'http://localhost:3000';
+
+    function updateStatus(connected) {
+      const indicator = document.getElementById('statusIndicator');
+      const text = document.getElementById('statusText');
+      const connectBtn = document.getElementById('connectBtn');
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+
+      if (connected) {
+        indicator.classList.add('connected');
+        text.textContent = 'Connected';
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        refreshBtn.disabled = false;
+      } else {
+        indicator.classList.remove('connected');
+        text.textContent = 'Disconnected';
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        refreshBtn.disabled = true;
+      }
+    }
+
+    function updateConnectionTime() {
+      if (connectionStartTime) {
+        const elapsed = Math.floor((Date.now() - connectionStartTime) / 1000);
+        document.getElementById('connectionTime').textContent = `${elapsed}s`;
+      }
+    }
+
+    function connect() {
+      if (socket) return;
+
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('error').style.display = 'none';
+
+      socket = io(API_URL);
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket');
+        updateStatus(true);
+        connectionStartTime = Date.now();
+        connectionTimeInterval = setInterval(updateConnectionTime, 1000);
+        document.getElementById('loading').style.display = 'none';
+      });
+
+      socket.on('tokens', (message) => {
+        console.log('Initial tokens received:', message);
+        if (message.data) {
+          message.data.forEach(token => {
+            tokens.set(token.token_address, token);
+          });
+          renderTokens();
+          updateStats();
+        }
+      });
+
+      socket.on('tokens:update', (message) => {
+        console.log('Token update received:', message);
+        updatesReceived++;
+        if (message.data) {
+          message.data.forEach(token => {
+            tokens.set(token.token_address, token);
+            highlightToken(token.token_address);
+          });
+          renderTokens();
+          updateStats();
+        }
+      });
+
+      socket.on('tokens:refresh', (message) => {
+        console.log('Refresh received:', message);
+        if (message.data) {
+          tokens.clear();
+          message.data.forEach(token => {
+            tokens.set(token.token_address, token);
+          });
+          renderTokens();
+          updateStats();
+        }
+      });
+
+      socket.on('error', (message) => {
+        console.error('Socket error:', message);
+        showError(message.error || 'Unknown error');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from WebSocket');
+        updateStatus(false);
+        if (connectionTimeInterval) {
+          clearInterval(connectionTimeInterval);
+          connectionTimeInterval = null;
+        }
+        document.getElementById('loading').textContent = 'Disconnected. Click Connect to reconnect.';
+        document.getElementById('loading').style.display = 'block';
+      });
+    }
+
+    function disconnect() {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+        updateStatus(false);
+      }
+    }
+
+    async function refreshData() {
+      try {
+        const response = await fetch(`${API_URL}/api/refresh`, {
+          method: 'POST',
+        });
+        const data = await response.json();
+        console.log('Refresh response:', data);
+      } catch (error) {
+        console.error('Refresh error:', error);
+        showError('Failed to refresh data');
+      }
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function highlightToken(address) {
+      const card = document.querySelector(`[data-address="${address}"]`);
+      if (card) {
+        card.classList.add('updated');
+        setTimeout(() => {
+          card.classList.remove('updated');
+        }, 1000);
+      }
+    }
+
+    function formatNumber(num) {
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+      return num.toFixed(2);
+    }
+
+    function renderTokens() {
+      const grid = document.getElementById('tokensGrid');
+      const tokenArray = Array.from(tokens.values());
+      
+      // Sort by volume
+      tokenArray.sort((a, b) => b.volume_sol - a.volume_sol);
+
+      grid.innerHTML = tokenArray.slice(0, 30).map(token => `
+        <div class="token-card" data-address="${token.token_address}">
+          <div class="token-header">
+            <div>
+              <div class="token-name">${token.token_name}</div>
+              <div class="token-ticker">${token.token_ticker}</div>
+            </div>
+            <div class="token-protocol">${token.protocol}</div>
+          </div>
+          <div class="token-metrics">
+            <div class="metric">
+              <span class="metric-label">Price (SOL)</span>
+              <span class="metric-value">${token.price_sol.toExponential(2)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">1h Change</span>
+              <span class="metric-value price-change ${token.price_1hr_change >= 0 ? 'positive' : 'negative'}">
+                ${token.price_1hr_change >= 0 ? '+' : ''}${token.price_1hr_change.toFixed(2)}%
+              </span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Volume (SOL)</span>
+              <span class="metric-value">${formatNumber(token.volume_sol)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Liquidity (SOL)</span>
+              <span class="metric-value">${formatNumber(token.liquidity_sol)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Market Cap (SOL)</span>
+              <span class="metric-value">${formatNumber(token.market_cap_sol)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Transactions</span>
+              <span class="metric-value">${token.transaction_count}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    function updateStats() {
+      document.getElementById('totalTokens').textContent = tokens.size;
+      document.getElementById('updatesReceived').textContent = updatesReceived;
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+    }
+
+    // Auto-connect on page load
+    window.addEventListener('load', connect);
+  </script>
+</body>
+</html>
