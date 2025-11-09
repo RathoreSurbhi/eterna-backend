@@ -1,0 +1,221 @@
+{
+  "info": {
+    "name": "Eterna Backend API",
+    "_postman_id": "eterna-backend-collection",
+    "description": "Real-time Meme Coin Data Aggregation Service API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Check if the API is running"
+      }
+    },
+    {
+      "name": "Get All Tokens (Default)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"]
+        },
+        "description": "Get tokens with default pagination (20 items)"
+      }
+    },
+    {
+      "name": "Get Tokens with Pagination",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?limit=10&cursor=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "cursor",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Get tokens with custom pagination"
+      }
+    },
+    {
+      "name": "Get Tokens - Sort by Volume",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?sort={\"field\":\"volume\",\"order\":\"desc\"}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "sort",
+              "value": "{\"field\":\"volume\",\"order\":\"desc\"}"
+            }
+          ]
+        },
+        "description": "Get tokens sorted by volume in descending order"
+      }
+    },
+    {
+      "name": "Get Tokens - Sort by Price Change",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?sort={\"field\":\"price_change\",\"order\":\"desc\"}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "sort",
+              "value": "{\"field\":\"price_change\",\"order\":\"desc\"}"
+            }
+          ]
+        },
+        "description": "Get tokens sorted by price change"
+      }
+    },
+    {
+      "name": "Get Tokens - Filter by Volume",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?filter={\"min_volume\":100}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "filter",
+              "value": "{\"min_volume\":100}"
+            }
+          ]
+        },
+        "description": "Filter tokens with minimum volume of 100 SOL"
+      }
+    },
+    {
+      "name": "Get Tokens - Filter by Protocol",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?filter={\"protocol\":\"Raydium\"}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "filter",
+              "value": "{\"protocol\":\"Raydium\"}"
+            }
+          ]
+        },
+        "description": "Filter tokens by Raydium protocol"
+      }
+    },
+    {
+      "name": "Get Tokens - Complex Filter & Sort",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens?limit=10&filter={\"min_volume\":50,\"min_price_change\":5}&sort={\"field\":\"volume\",\"order\":\"desc\"}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "filter",
+              "value": "{\"min_volume\":50,\"min_price_change\":5}"
+            },
+            {
+              "key": "sort",
+              "value": "{\"field\":\"volume\",\"order\":\"desc\"}"
+            }
+          ]
+        },
+        "description": "Get tokens with min volume 50 SOL, min price change 5%, sorted by volume"
+      }
+    },
+    {
+      "name": "Get Token by Address - USDC",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"]
+        },
+        "description": "Get USDC token details by address"
+      }
+    },
+    {
+      "name": "Get Token by Address - BONK",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/tokens/7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tokens", "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"]
+        },
+        "description": "Get BONK token details by address"
+      }
+    },
+    {
+      "name": "Refresh Cache",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/refresh",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "refresh"]
+        },
+        "description": "Force refresh the token cache"
+      }
+    },
+    {
+      "name": "Root Endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        },
+        "description": "Get API information and available endpoints"
+      }
+    }
+  ]
+}
