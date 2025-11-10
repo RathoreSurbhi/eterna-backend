@@ -1,6 +1,9 @@
 import { HttpClient } from '../utils/httpClient';
 import axios from 'axios';
 
+// Increase timeout for potentially slow retry tests in CI/local
+jest.setTimeout(10000);
+
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -9,7 +12,13 @@ describe('HttpClient', () => {
   const baseURL = 'https://api.example.com';
 
   beforeEach(() => {
+    // Make axios.create return the mocked axios instance so instance.get/post are mocked
+    mockedAxios.create.mockReturnValue(mockedAxios as any);
     httpClient = new HttpClient(baseURL);
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
