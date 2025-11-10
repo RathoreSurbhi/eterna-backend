@@ -1,9 +1,6 @@
 import { TokenData } from "../types";
 
-/**
- * Mock token data for demo purposes
- * Use this when external APIs are blocked or for testing
- */
+// creating data IIT wifi blocks most of web3 content
 export const MOCK_TOKENS: TokenData[] = [
   {
     token_address: "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
@@ -232,9 +229,6 @@ export const MOCK_TOKENS: TokenData[] = [
   },
 ];
 
-/**
- * Generate random price changes for demo purposes
- */
 export function getUpdatedMockTokens(): TokenData[] {
   return MOCK_TOKENS.map((token) => ({
     ...token,

@@ -16,10 +16,7 @@ export class AggregationService {
     this.geckoTerminalClient = new GeckoTerminalClient();
   }
 
-  /**
-   * Merge duplicate tokens from multiple sources
-   * Prioritizes data completeness and recency
-   */
+  // Merge duplicate tokens from multiple sources
   private mergeTokens(tokens: TokenData[]): TokenData[] {
     const tokenMap = new Map<string, TokenData>();
 
@@ -29,7 +26,6 @@ export class AggregationService {
       if (!existing) {
         tokenMap.set(token.token_address, token);
       } else {
-        // Merge: prefer non-zero values and more recent data
         const merged: TokenData = {
           ...existing,
           token_name: token.token_name || existing.token_name,
@@ -54,12 +50,10 @@ export class AggregationService {
     return Array.from(tokenMap.values());
   }
 
-  /**
-   * Fetch and aggregate tokens from all sources
-   */
+  
   async aggregateTokens(forceRefresh: boolean = false): Promise<TokenData[]> {
     try {
-      // Check cache first
+      // cache
       if (!forceRefresh) {
         const cached = await cacheService.get<TokenData[]>(this.AGGREGATED_CACHE_KEY);
         if (cached) {
@@ -71,31 +65,31 @@ export class AggregationService {
       logger.info('Aggregating tokens from all sources');
       const allTokens: TokenData[] = [];
 
-      // Fetch from DexScreener - search for trending tokens
+      // DexScreener - search for trending tokens
       const dexScreenerPromises = POPULAR_TOKENS.map((address) =>
         this.dexScreenerClient.getTokensByAddress(address)
       );
 
-      // Also do a general search
+      // General search
       const searchPromises = [
         this.dexScreenerClient.searchTokens('solana meme'),
         this.dexScreenerClient.searchTokens('bonk'),
       ];
 
-      // Fetch from GeckoTerminal
+      // GeckoTerminal
       const geckoPromises = [
         this.geckoTerminalClient.getTrendingTokens(1),
         this.geckoTerminalClient.getTrendingTokens(2),
       ];
 
-      // Execute all requests in parallel
+      // Parallelism
       const results = await Promise.allSettled([
         ...dexScreenerPromises,
         ...searchPromises,
         ...geckoPromises,
       ]);
 
-      // Collect successful results
+      // Collect Results
       results.forEach((result) => {
         if (result.status === 'fulfilled' && result.value) {
           allTokens.push(...result.value);
@@ -104,11 +98,10 @@ export class AggregationService {
 
       logger.info(`Fetched ${allTokens.length} tokens before merging`);
 
-      // Merge duplicates
+      // handke Duplicates
       const mergedTokens = this.mergeTokens(allTokens);
       logger.info(`Merged to ${mergedTokens.length} unique tokens`);
 
-      // Cache the result
       await cacheService.set(this.AGGREGATED_CACHE_KEY, mergedTokens);
 
       return mergedTokens;
@@ -118,9 +111,7 @@ export class AggregationService {
     }
   }
 
-  /**
-   * Apply filters to token list
-   */
+  // Apply filters to token list
   private applyFilters(tokens: TokenData[], filter?: TokenFilter): TokenData[] {
     if (!filter) return tokens;
 
@@ -143,12 +134,10 @@ export class AggregationService {
     });
   }
 
-  /**
-   * Apply sorting to token list
-   */
+  // apply soritng
   private applySorting(tokens: TokenData[], sort?: TokenSort): TokenData[] {
     if (!sort) {
-      // Default: sort by volume descending
+      // defaukt sort
       return tokens.sort((a, b) => b.volume_sol - a.volume_sol);
     }
 
@@ -191,9 +180,7 @@ export class AggregationService {
     return sortedTokens;
   }
 
-  /**
-   * Get paginated, filtered, and sorted tokens
-   */
+  //Get paginated, filtered, and sorted tokens
   async getTokens(
     limit: number = 20,
     cursor?: string,
@@ -210,7 +197,6 @@ export class AggregationService {
       // Apply sorting
       tokens = this.applySorting(tokens, sort);
 
-      // Handle pagination
       const startIndex = cursor ? parseInt(cursor, 10) : 0;
       const endIndex = startIndex + limit;
       const paginatedTokens = tokens.slice(startIndex, endIndex);
@@ -233,9 +219,7 @@ export class AggregationService {
     }
   }
 
-  /**
-   * Get a single token by address
-   */
+  // one token by address
   async getTokenByAddress(address: string): Promise<TokenData | null> {
     try {
       const cacheKey = `${this.CACHE_KEY_PREFIX}${address}`;
@@ -274,9 +258,7 @@ export class AggregationService {
     }
   }
 
-  /**
-   * Force refresh all cached data
-   */
+  // force refresh cache
   async refreshCache(): Promise<void> {
     logger.info('Forcing cache refresh');
     await cacheService.delPattern('tokens:*');

@@ -11,11 +11,9 @@ export class SchedulerService {
     this.wsService = wsService;
   }
 
-  /**
-   * Start all scheduled tasks
-   */
+
   start(): void {
-    // Refresh cache every 2 minutes
+    // Refresh 2 min
     const cacheRefreshTask = cron.schedule('*/2 * * * *', async () => {
       try {
         logger.info('Running scheduled cache refresh');
@@ -32,7 +30,7 @@ export class SchedulerService {
       }
     });
 
-    // Update aggregated data every 30 seconds (lighter than full refresh)
+    // Update aggregated data 30 sec
     const quickUpdateTask = cron.schedule('*/30 * * * * *', async () => {
       try {
         logger.debug('Running quick data update');
@@ -50,9 +48,7 @@ export class SchedulerService {
     });
   }
 
-  /**
-   * Stop all scheduled tasks
-   */
+
   stop(): void {
     this.tasks.forEach((task) => task.stop());
     logger.info('Scheduler service stopped');
