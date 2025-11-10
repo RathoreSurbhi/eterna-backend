@@ -86,28 +86,61 @@ A high-performance backend service that aggregates real-time meme coin data from
 - Redis (ioredis client)
 - Axios with retry logic
 
-## Installation
 
-- Node.js 18+
-- Redis (local or remote)
-- npm or yarn
-
-### Steps
+## Steps
 
 ```bash
-
-git clone https://github.com/RathoreSurbhi/eterna-backend.git
-cd eterna-backend
-
 npm install
 
 cp .env.example .env
 
 npm run dev
-
-npm run build
-npm start
 ```
+**On seperate terminal**
+```bash
+redis-server
+```
+
+## Run Tests
+
+```bash
+# Health Check
+curl http://localhost:3000/api/health
+
+# Get 5 tokens
+curl http://localhost:3000/api/tokens?limit=5
+
+# Sorting by volume
+curl "http://localhost:3000/api/tokens?limit=5&sort=%7B%22field%22%3A%22volume%22%2C%22order%22%3A%22desc%22%7D"
+
+# Filter by minimum volume
+curl "http://localhost:3000/api/tokens?limit=5&filter=%7B%22min_volume%22%3A100%7D"
+
+# Get specific token (say USDC)
+curl http://localhost:3000/api/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+
+# Making 5-10 rapid calls
+for i in {1..10}; do
+  echo "Request $i:"
+  time curl -s http://localhost:3000/api/tokens?limit=5 > /dev/null
+done
+```
+
+**force a cache refresh**
+```bash
+   curl -X POST http://localhost:3000/api/refresh
+```
+
+**run test**
+```bash
+npm test
+```
+
+**test coverage**
+```bash
+npm test -- --coverage
+```
+
 
 
 ## 📄 License
