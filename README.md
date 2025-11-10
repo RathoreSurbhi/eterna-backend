@@ -3,8 +3,15 @@
 A high-performance backend service that aggregates real-time meme coin data from multiple DEX sources with efficient caching and WebSocket updates.
 
 
-## Project Structure
+## Performance numbers
+- **Response time:** "Under 100ms for cached data, under 2 seconds for fresh API calls"
+- **WebSocket latency:** "Real-time updates pushed every 5 seconds"
+- **Rate limiting:** "Handles 300 requests per minute limit with caching"
+- **Tests:** "15+ tests with 80%+ coverage"
+- **Caching:** "30-second TTL reduces API calls by 90%"
 
+
+## Project Structure
 ```
     eterna-backend/
     ├── src/
@@ -28,7 +35,6 @@ A high-performance backend service that aggregates real-time meme coin data from
 
 
 ## System Overview
-
 ```
 ┌─────────────┐
 │   Client    │
@@ -71,20 +77,13 @@ A high-performance backend service that aggregates real-time meme coin data from
               └───────────────┘
 ```
 
-### Data Flow
+## Data Flow
 - Client connects → WebSocket sends initial 30 tokens
 - Every 5s, WebSocket pushes only changed tokens
 - REST endpoints fetch from cache (30s TTL) or aggregate from sources
 - **Background Jobs**: 
    - Quick updates every 30s
    - Full cache refresh every 2 minutes
-
-## Performance numbers
-- **Response time:** "Under 100ms for cached data, under 2 seconds for fresh API calls"
-- **WebSocket latency:** "Real-time updates pushed every 5 seconds"
-- **Rate limiting:** "Handles 300 requests per minute limit with caching"
-- **Tests:** "15+ tests with 80%+ coverage"
-- **Caching:** "30-second TTL reduces API calls by 90%"
 
 ## Tech Stack used
 - Node.js 18+ with TypeScript
@@ -94,8 +93,7 @@ A high-performance backend service that aggregates real-time meme coin data from
 - Axios with retry logic
 
 
-## Steps
-
+## Steps for demo
 ```bash
 npm install
 
@@ -109,7 +107,6 @@ redis-server
 ```
 
 ## Run Tests
-
 ```bash
 # Health Check
 curl http://localhost:3000/api/health
@@ -157,11 +154,12 @@ xdg-open demo.html
 ```
 
 
-## 📄 License
-![MIT license](./LICENSE)
+## License
+[MIT license](./LICENSE)
 
 ## Links
 
 - GitHub Repository: https://github.com/RathoreSurbhi/eterna-backend
+- youtube link: https://youtu.be/p3LZrnMel7s?si=KohbgZAFaY1qqyNt
 - Postman Collection: `./postman_collection.json`
-- youtube link `to be added.......`
+- Json Outputs: [folder link](./json_outputs/)
