@@ -133,6 +133,9 @@ for i in {1..10}; do
 done
 ```
 
+**Outputs**
+json ouput are saved [here](./json_outputs/)
+
 **force a cache refresh**
 ```bash
    curl -X POST http://localhost:3000/api/refresh
